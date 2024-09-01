@@ -55,6 +55,26 @@ describe('User entity unit tests', () => {
     expect(sut.name).toBe(name);
   });
 
+  it('test update name' , () => {
+    sut = new UserEntity(UserDataBuilder({}));
+
+    const name = faker.person.fullName();
+
+    sut.update(name);
+
+    expect(sut.name).toBe(name);
+  });
+
+  it('test update password' , () => {
+    sut = new UserEntity(UserDataBuilder({}));
+
+    const password = faker.internet.password();
+
+    sut.updatePassword(password);
+
+    expect(sut.password).toBe(password);
+  });
+
   it('test email getter', () => {
     const email = faker.internet.email();
     sut = new UserEntity(UserDataBuilder({ email }));
