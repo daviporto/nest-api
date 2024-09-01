@@ -3,7 +3,7 @@ import { EnvConfig } from '@/shared/infrastructure/env-config/env-config.interfa
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-class EnvConfigService implements EnvConfig {
+export class EnvConfigService implements EnvConfig {
   constructor(private configService: ConfigService) {
   }
 
