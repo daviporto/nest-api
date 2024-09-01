@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { UserEntity, UserProps } from '@/user/domain/entities/user.entity';
+import { UserDataBuilder } from '@/user/domain/testing/helper/user-data-builder';
 
 function commonAssertions(sut: UserEntity, props: UserProps) {
   expect(sut).toBeDefined();
@@ -11,7 +12,6 @@ function commonAssertions(sut: UserEntity, props: UserProps) {
 }
 
 describe('User entity unit tests', () => {
-  let props: UserProps;
   let sut: UserEntity;
 
   it('test constructor without createdAt', () => {
@@ -47,13 +47,8 @@ describe('User entity unit tests', () => {
 
   it('test name getter', () => {
     const name = faker.person.fullName();
-    const props = {
-      name,
-      email: faker.internet.email(),
-      password: faker.internet.password(),
-    };
 
-    sut = new UserEntity(props);
+    sut = new UserEntity(UserDataBuilder({ name }));
 
     expect(sut.name).toBeDefined();
     expect(typeof sut.name).toBe('string');
@@ -62,13 +57,7 @@ describe('User entity unit tests', () => {
 
   it('test email getter', () => {
     const email = faker.internet.email();
-    const props = {
-      name: faker.person.fullName(),
-      email,
-      password: faker.internet.password(),
-    };
-
-    sut = new UserEntity(props);
+    sut = new UserEntity(UserDataBuilder({ email }));
 
     expect(sut.email).toBeDefined();
     expect(typeof sut.email).toBe('string');
@@ -77,13 +66,7 @@ describe('User entity unit tests', () => {
 
   it('test password getter', () => {
     const password = faker.internet.password();
-    const props = {
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      password,
-    };
-
-    sut = new UserEntity(props);
+    sut = new UserEntity(UserDataBuilder({ password }));
 
     expect(sut.password).toBeDefined();
     expect(typeof sut.password).toBe('string');
@@ -92,14 +75,7 @@ describe('User entity unit tests', () => {
 
   it('test createdAt getter', () => {
     const createdAt = new Date();
-    const props = {
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      password: faker.internet.password(),
-      createdAt,
-    };
-
-    sut = new UserEntity(props);
+    sut = new UserEntity(UserDataBuilder({ createdAt }));
 
     expect(sut.createdAt).toBeDefined();
     expect(sut.createdAt).toBeInstanceOf(Date);
