@@ -5,6 +5,7 @@ import { UserDataBuilder } from '@/user/domain/testing/helper/user-data-builder'
 function commonAssertions(sut: UserEntity, props: UserProps) {
   expect(sut).toBeDefined();
   expect(sut).toBeInstanceOf(UserEntity);
+  expect(UserEntity.validate).toHaveBeenCalled()
 
   expect(sut.props.name).toBe(props.name);
   expect(sut.props.email).toBe(props.email);
@@ -13,6 +14,10 @@ function commonAssertions(sut: UserEntity, props: UserProps) {
 
 describe('User entity unit tests', () => {
   let sut: UserEntity;
+
+  beforeEach(() => {
+    UserEntity.validate = jest.fn();
+  })
 
   it('test constructor without createdAt', () => {
     const props = {
