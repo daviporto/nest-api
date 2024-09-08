@@ -19,7 +19,7 @@ export class UserInMemoryRepository
     return user;
   }
 
-  async emailExists(email: string): Promise<void> {
+  async assureEmailIsAvailableToUse(email: string): Promise<void> {
     const user = this.items.find((user) => user.email === email);
     if (user) {
       throw new EmailAlreadyInUseError(email);

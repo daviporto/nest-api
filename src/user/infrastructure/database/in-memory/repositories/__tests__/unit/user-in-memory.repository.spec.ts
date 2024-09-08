@@ -41,18 +41,18 @@ describe('user in memory repository', () => {
     const user = createUserEntity();
     await sut.insert(user);
 
-    expect(sut.emailExists(user.email)).rejects.toThrow(EmailAlreadyInUseError);
+    expect(sut.assureEmailIsAvailableToUse(user.email)).rejects.toThrow(EmailAlreadyInUseError);
   });
 
   it('should not throw exception when using emailExists without user', async () => {
-    await sut.emailExists(faker.internet.email());
+    await sut.assureEmailIsAvailableToUse(faker.internet.email());
   });
 
   it('should not throw exception when using emailExists with different user', async () => {
     const user = createUserEntity();
     await sut.insert(user);
 
-    await sut.emailExists(faker.internet.email());
+    await sut.assureEmailIsAvailableToUse(faker.internet.email());
   });
 
   describe('apply filters method', () => {
