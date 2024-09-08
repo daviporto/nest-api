@@ -72,7 +72,7 @@ export class SearchParams {
   protected _sortDir: SortOrderEnum | null;
   protected _filter: string | null;
 
-  constructor(pros: SearchProps) {
+  constructor(pros: SearchProps = {}) {
     this.setPage(pros.page || defaultInitialPage);
     this.setPerPage(pros.perPage || defaultPerPage);
     this.setSort(pros.sort || null);
@@ -157,5 +157,7 @@ export interface SearchableRepositoryInterface<
   SearchInput = SearchParams,
   SearchOutput = SearchResult<E, Filter>,
 > extends RepositoryInterface<E> {
+  sortableFields: string[];
+
   search(searchInput: SearchInput): Promise<SearchOutput>;
 }
