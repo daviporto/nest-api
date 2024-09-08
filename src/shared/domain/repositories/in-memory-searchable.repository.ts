@@ -68,11 +68,11 @@ export abstract class InMemorySearchableRepository<E extends Entity>
     });
   }
 
-  protected applyPagination(
+  protected async applyPagination(
     items: E[],
     page: SearchParams['page'],
     perPage: SearchParams['perPage'],
-  ) {
+  ): Promise<E[]> {
     const start = (page - 1) * perPage;
     const end = start + perPage;
 

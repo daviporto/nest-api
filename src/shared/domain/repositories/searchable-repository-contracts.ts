@@ -6,7 +6,7 @@ export enum SortOrderEnum {
   DESC = 'desc',
 }
 
-export type SearchProps<Filter = string> = {
+export type SearchProps<Filter> = {
   page?: number;
   perPage?: number;
   sort?: string | null;
@@ -65,14 +65,14 @@ const defaultInitialPage = 1;
 
 const defaultPerPage = 10;
 
-export class SearchParams {
+export class SearchParams<Filter = string> {
   protected _page: number;
   protected _perPage: number;
   protected _sort: string | null;
   protected _sortDir: SortOrderEnum | null;
-  protected _filter: string | null;
+  protected _filter: Filter | null;
 
-  constructor(pros: SearchProps = {}) {
+  constructor(pros: SearchProps<Filter> = {}) {
     this.setPage(pros.page || defaultInitialPage);
     this.setPerPage(pros.perPage || defaultPerPage);
     this.setSort(pros.sort || null);
@@ -142,19 +142,19 @@ export class SearchParams {
     }
   }
 
-  get filter(): string | null {
+  get filter(): Filter | null {
     return this._filter;
   }
 
-  private setFilter(filter: string | null): void {
-    this._filter = filter || null;
+  private setFilter(filter: Filter | null): void {
+    this._filter = filter === null || filter === undefined ? null : filter;
   }
 }
 
 export interface SearchableRepositoryInterface<
   E extends Entity,
   Filter = string,
-  SearchInput = SearchParams,
+  SearchInput = SearchParams<Filter>,
   SearchOutput = SearchResult<E, Filter>,
 > extends RepositoryInterface<E> {
   sortableFields: string[];

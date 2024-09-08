@@ -77,7 +77,7 @@ describe('InMemorySearchableRepository', () => {
     });
   });
 
-  describe('applySort method', () => {
+  describe('apply sort method', () => {
     beforeEach(() => {
       sut = new StubMemoryRepository();
       sut.sortableFields = ['name'];
