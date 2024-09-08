@@ -1,5 +1,5 @@
 import { UserInMemoryRepository } from '@/user/infrastructure/database/in-memory/repositories/user-in-memory.repository';
-import { UserNotFoundError } from '@/user/domain/errors/user-not-found-error';
+import { UserWithEmailNotFoundError } from '@/user/domain/errors/user-with-email-not-found-error';
 import { faker } from '@faker-js/faker';
 import { UserDataBuilder } from '@/user/domain/testing/helper/user-data-builder';
 import { UserEntity, UserProps } from '@/user/domain/entities/user.entity';
@@ -18,14 +18,14 @@ describe('user in memory repository', () => {
   });
 
   it('should throw exception when using findByEmail without user', () => {
-    expect(sut.findByEmail('non existent')).rejects.toThrow(UserNotFoundError);
+    expect(sut.findByEmail('non existent')).rejects.toThrow(UserWithEmailNotFoundError);
   });
 
   it('should throw exception when there users but none with the desired email', async () => {
     const user = createUserEntity();
     await sut.insert(user);
 
-    expect(sut.findByEmail('non existent')).rejects.toThrow(UserNotFoundError);
+    expect(sut.findByEmail('non existent')).rejects.toThrow(UserWithEmailNotFoundError);
   });
 
   it('should return user when using findByEmail with user', async () => {

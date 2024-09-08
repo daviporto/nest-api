@@ -1,19 +1,22 @@
 import { UserEntity } from '@/user/domain/entities/user.entity';
 import { UserRepository } from '@/user/domain/repositories/user.repository';
-import { UserNotFoundError } from '@/user/domain/errors/user-not-found-error';
+import { UserWithEmailNotFoundError } from '@/user/domain/errors/user-with-email-not-found-error';
 import { EmailAlreadyInUseError } from '@/user/domain/errors/email-already-in-use-error';
 import { InMemorySearchableRepository } from '@/shared/domain/repositories/in-memory-searchable.repository';
 import { SortOrderEnum } from '@/shared/domain/repositories/searchable-repository-contracts';
+import { NotFoundError } from '@/shared/domain/errors/not-found-error';
+import { UserWithIdNotFoundError } from '@/user/infrastructure/errors/user-with-id-not-found-error';
 
 export class UserInMemoryRepository
   extends InMemorySearchableRepository<UserEntity>
   implements UserRepository.Repository
 {
   sortableFields = ['name', 'createdAt'];
+
   async findByEmail(email: string): Promise<UserEntity> {
     const user = this.items.find((user) => user.email === email);
     if (!user) {
-      throw new UserNotFoundError(email);
+      throw new UserWithEmailNotFoundError(email);
     }
 
     return user;
@@ -42,14 +45,24 @@ export class UserInMemoryRepository
     sort: string | null,
     sortDir: SortOrderEnum | null,
   ): Promise<UserEntity[]> {
-    if(!sort) {
+    if (!sort) {
       sort = 'createdAt';
     }
 
-    if(!sortDir){
+    if (!sortDir) {
       sortDir = SortOrderEnum.DESC;
     }
 
     return super.applySort(items, sort, sortDir);
+  }
+
+  protected async _get(id: string): Promise<UserEntity> {
+    const item = this.items.find((item) => item.id === id);
+
+    if (!item) {
+      throw new UserWithIdNotFoundError(id);
+    }
+
+    return item;
   }
 }

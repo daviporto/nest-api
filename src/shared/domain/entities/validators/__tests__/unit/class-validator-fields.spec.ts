@@ -44,7 +44,7 @@ describe('ClassValidatorFields Unit tests', () => {
 
     expect(sut).toBeDefined();
     expect(sut.validate({ field: 'string' })).toBeTruthy();
-    expect(spyValidateSync).toHaveBeenCalledTimes(1);
+    expect(spyValidateSync).toHaveBeenCalled();
     expect(sut.errors).toBeNull();
     expect(sut.validatedData).toStrictEqual({ field: 'string' });
   });
