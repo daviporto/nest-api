@@ -1,7 +1,5 @@
-import { InMemoryRepository } from '@/shared/domain/repositories/in-memory.repository';
 import { UserEntity } from '@/user/domain/entities/user.entity';
 import { UserRepository } from '@/user/application/user.repository';
-import { NotFoundError } from '@/shared/domain/errors/not-found-error';
 import { UserNotFoundError } from '@/user/domain/errors/user-not-found-error';
 import { EmailAlreadyInUseError } from '@/user/domain/errors/email-already-in-use-error';
 import { InMemorySearchableRepository } from '@/shared/domain/repositories/in-memory-searchable.repository';
