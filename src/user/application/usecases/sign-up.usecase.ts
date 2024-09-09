@@ -1,4 +1,3 @@
-import { BadRequestError } from '@/shared/application/errors/bad-request-error';
 import { UserRepository } from '@/user/domain/repositories/user.repository';
 import { UserEntity } from '@/user/domain/entities/user.entity';
 import { HashProvider } from '@/shared/application/providers/hash-provider';
@@ -7,6 +6,7 @@ import {
   UserOutputMapper,
 } from '@/user/application/dtos/user-output';
 import { UseCaseInterface } from '@/shared/application/use-cases/use-case';
+import { AbstractUseCase } from '@/shared/application/use-cases/abstract-use-case';
 
 export namespace SignupUsecase {
   export type Input = {
@@ -17,11 +17,16 @@ export namespace SignupUsecase {
 
   export type Output = UserOutput;
 
-  export class UseCase implements UseCaseInterface<Input, Output> {
+  export class UseCase
+    extends AbstractUseCase<Input, Output>
+    implements UseCaseInterface<Input, Output>
+  {
     constructor(
       private repository: UserRepository.Repository,
       private hashProvider: HashProvider,
-    ) {}
+    ) {
+      super();
+    }
 
     async execute(input: Input): Promise<Output> {
       this.assureRequiredInputProvided(input);
@@ -39,14 +44,10 @@ export namespace SignupUsecase {
       return UserOutputMapper.toOutput(entity);
     }
 
-    private assureRequiredInputProvided(input: Input) {
+    protected assureRequiredInputProvided(input: Input) {
       const requiredFields = ['name', 'email', 'password'];
 
-      requiredFields.forEach((field) => {
-        if (!input[field]) {
-          throw new BadRequestError(`${field} is required`);
-        }
-      });
+      super.assureRequiredInputProvided(input, requiredFields);
     }
   }
 }

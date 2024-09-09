@@ -1,4 +1,4 @@
-import { SignupUsecase } from '@/user/application/usecases/signup.usecase';
+import { SignupUsecase } from '@/user/application/usecases/sign-up.usecase';
 import { UserInMemoryRepository } from '@/user/infrastructure/database/in-memory/repositories/user-in-memory.repository';
 import { HashProvider } from '@/shared/application/providers/hash-provider';
 import { BcryptjsHashProvider } from '@/user/infrastructure/providers/hash-provider/bcryptjs-hash.provider';
