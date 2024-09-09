@@ -2,7 +2,7 @@ import { SignupUsecase } from '@/user/application/usecases/signup.usecase';
 import { UserInMemoryRepository } from '@/user/infrastructure/database/in-memory/repositories/user-in-memory.repository';
 import { HashProvider } from '@/shared/application/providers/hash-provider';
 import { BcryptjsHashProvider } from '@/user/infrastructure/providers/hash-provider/bcryptjs-hash.provider';
-import { BadRequestError } from '@/user/application/errors/bad-request-error';
+import { BadRequestError } from '@/shared/application/errors/bad-request-error';
 
 describe('Signup use case test', () => {
   let sut: SignupUsecase.UseCase;
