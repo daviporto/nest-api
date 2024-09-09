@@ -22,6 +22,6 @@ export namespace UserRepository {
     > {
     findByEmail(email: string): Promise<UserEntity>;
 
-    emailExists(email: string): Promise<void>;
+    assureEmailIsAvailableToUse(email: string): Promise<void>;
   }
 }
