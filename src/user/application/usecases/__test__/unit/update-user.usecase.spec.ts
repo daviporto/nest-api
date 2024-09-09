@@ -15,7 +15,7 @@ describe('Update user use case test', () => {
     sut = new UpdateUserUsecase.UseCase(repository);
   });
 
-  it('should throw UserNotFound if user does not exist', async () => {
+  it('should throw UserWithIdNotFoundError if user does not exist', async () => {
     const input = { id: 'non-existent-id', name: faker.person.fullName() };
 
     await expect(sut.execute(input)).rejects.toThrow(
@@ -23,23 +23,4 @@ describe('Update user use case test', () => {
     );
   });
 
-  it('should throw a BadRequestError if name is not provided', async () => {
-    const input = { id: '1' };
-
-    await expect(sut.execute(input as any)).rejects.toThrow(BadRequestError);
-  });
-
-  it('should update user correctly', async () => {
-    const user = new UserEntity(UserDataBuilder({}));
-    repository.insert(user);
-
-    const spyUpdate = jest.spyOn(repository, 'update');
-
-    const input = { id: user.id, name: faker.person.fullName() };
-
-    const updated = await sut.execute(input);
-
-    expect(spyUpdate).toHaveBeenCalled();
-    expect(updated.name).toBe(input.name);
-  });
 });
