@@ -1,8 +1,11 @@
-import { BadRequestError } from '@/user/application/errors/bad-request-error';
+import { BadRequestError } from '@/shared/application/errors/bad-request-error';
 import { UserRepository } from '@/user/domain/repositories/user.repository';
 import { UserEntity } from '@/user/domain/entities/user.entity';
 import { HashProvider } from '@/shared/application/providers/hash-provider';
-import { UserOutput } from '@/user/application/dtos/user-output';
+import {
+  UserOutput,
+  UserOutputMapper,
+} from '@/user/application/dtos/user-output';
 import { UseCaseInterface } from '@/shared/application/use-cases/use-case';
 
 export namespace SignupUsecase {
@@ -33,7 +36,7 @@ export namespace SignupUsecase {
 
       await this.repository.insert(entity);
 
-      return entity.toJSON();
+      return UserOutputMapper.toOutput(entity);
     }
 
     private assureRequiredInputProvided(input: Input) {

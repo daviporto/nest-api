@@ -1,6 +1,5 @@
 import { UserInMemoryRepository } from '@/user/infrastructure/database/in-memory/repositories/user-in-memory.repository';
 import { GetUserUsecase } from '@/user/application/usecases/get-user.usecase';
-import { UserWithEmailNotFoundError } from '@/user/domain/errors/user-with-email-not-found-error';
 import { UserEntity } from '@/user/domain/entities/user.entity';
 import { UserDataBuilder } from '@/user/domain/testing/helper/user-data-builder';
 import { UserWithIdNotFoundError } from '@/user/infrastructure/errors/user-with-id-not-found-error';
