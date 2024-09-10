@@ -11,13 +11,22 @@ import { ListUsersUsecase } from '@/user/application/usecases/list-users.usecase
 import { UpdateUserUsecase } from '@/user/application/usecases/update-user.usecase';
 import { UpdatePasswordUsecase } from '@/user/application/usecases/update-password.usecase';
 import { DeleteUserUsecase } from '@/user/application/usecases/delete-user.usecase';
+import { PrismaService } from '@/shared/infrastructure/database/prisma/prisma.service';
+import { UserPrismaRepository } from '@/user/infrastructure/database/prisma/repositories/user-prisma.repository';
 
 @Module({
   controllers: [UserController],
   providers: [
     {
+      provide: 'PrismaService',
+      useClass: PrismaService,
+    },
+    {
       provide: 'UserRepository',
-      useClass: UserInMemoryRepository,
+      useFactory: (prismaService: PrismaService) => {
+        return new UserPrismaRepository(prismaService);
+      },
+      inject: ['PrismaService'],
     },
     {
       provide: 'HashProvider',
