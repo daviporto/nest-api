@@ -201,7 +201,7 @@ describe('InMemorySearchableRepository', () => {
 
       expect(result.items.length).toBe(1);
       expect(result.items[0].props.name).toBe('name1');
-      expect(result.total).toBe(10);
+      expect(result.total).toBe(1);
       expect(result.currentPage).toBe(1);
       expect(result.perPage).toBe(2);
     });
