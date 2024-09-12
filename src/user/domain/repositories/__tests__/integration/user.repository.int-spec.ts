@@ -32,6 +32,7 @@ describe('User prisma repository integration tests', () => {
 
   afterAll(async () => {
     await prismaService.$disconnect();
+    await module.close();
   });
 
   it('should throw error when entity does not exist', () => {
