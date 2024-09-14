@@ -9,6 +9,7 @@ export class ConflictErrorFilter implements ExceptionFilter {
     const response = ctx.getResponse<FastifyReply>();
 
     response.status(409).send({
+      statusCode: 409,
       error: 'Conflict',
       message: exception.message,
     });
