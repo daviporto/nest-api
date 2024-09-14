@@ -31,7 +31,7 @@ describe('UserController e2e tests', () => {
     }).compile();
 
     app = module.createNestApplication();
-    applyGlobalConfig(app)
+    applyGlobalConfig(app);
     await app.init();
 
     repository = module.get<UserRepository.Repository>('UserRepository');
@@ -53,7 +53,7 @@ describe('UserController e2e tests', () => {
       .send(signUpDto)
       .expect(201);
 
-    expect(response.body).toHaveProperty('data')
+    expect(response.body).toHaveProperty('data');
 
     expect(Object.keys(response.body.data)).toStrictEqual([
       'id',
@@ -75,5 +75,112 @@ describe('UserController e2e tests', () => {
     const serialized = instanceToPlain(presenter);
 
     expect(response.body.data).toStrictEqual(serialized);
+  });
+
+  it('should return error when no parameter in body', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/user')
+      .send()
+      .expect(422);
+
+    expect(response.body).toHaveProperty('error');
+
+    expect(response.body).toMatchObject({
+      error: 'Unprocessable Entity',
+      message: [
+        'name should not be empty',
+        'name must be a string',
+        'email must be an email',
+        'email should not be empty',
+        'email must be a string',
+        'password should not be empty',
+        'password must be a string',
+      ],
+      statusCode: 422,
+    });
+  });
+
+  it('should return error when name is not a string', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/user')
+      .send({
+        ...signUpDto,
+        name: 123 as any,
+      })
+      .expect(422);
+
+    expect(response.body).toHaveProperty('error');
+    expect(response.body).toMatchObject({
+      error: 'Unprocessable Entity',
+      message: ['name must be a string'],
+      statusCode: 422,
+    });
+  });
+
+  it('should return error when email is not valid', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/user')
+      .send({
+        ...signUpDto,
+        email: 'invalid-email',
+      })
+      .expect(422);
+
+    expect(response.body).toHaveProperty('error');
+    expect(response.body).toMatchObject({
+      error: 'Unprocessable Entity',
+      message: ['email must be an email'],
+      statusCode: 422,
+    });
+  });
+
+  it('should return error when password is not a string', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/user')
+      .send({
+        ...signUpDto,
+        password: {} as any,
+      })
+      .expect(422);
+
+    expect(response.body).toHaveProperty('error');
+    expect(response.body).toMatchObject({
+      error: 'Unprocessable Entity',
+      message: ['password must be a string'],
+      statusCode: 422,
+    });
+  });
+
+  it('should return error with invalid propriety', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/user')
+      .send({
+        ...signUpDto,
+        invalid: 'invalid',
+      })
+      .expect(422);
+
+    expect(response.body).toHaveProperty('error');
+    expect(response.body).toMatchObject({
+      error: 'Unprocessable Entity',
+      message: ['property invalid should not exist'],
+      statusCode: 422,
+    });
+  });
+
+  it('should return error when the email is duplicated', async () => {
+    await prismaService.user.create({ data: signUpDto });
+    const response = await request(app.getHttpServer())
+      .post('/user')
+      .send({
+        ...signUpDto,
+      })
+      .expect(409);
+
+    expect(response.body).toHaveProperty('error');
+    expect(response.body).toMatchObject({
+      error: 'Conflict',
+      message: `User with email ${signUpDto.email} already exists`,
+    });
   });
 });

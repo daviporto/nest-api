@@ -6,6 +6,7 @@ import { UserWithIdNotFoundError } from '@/user/infrastructure/errors/user-with-
 import { UserModelMapper } from '@/user/infrastructure/database/prisma/models/user-model.mapper';
 import { SortOrderEnum } from '@/shared/domain/repositories/searchable-repository-contracts';
 import { UserWithEmailNotFoundError } from '@/user/domain/errors/user-with-email-not-found-error';
+import { EmailAlreadyInUseError } from '@/user/domain/errors/email-already-in-use-error';
 
 export class UserPrismaRepository implements UserRepository.Repository {
   sortableFields: string[] = ['name', 'createdAt'];
@@ -26,7 +27,7 @@ export class UserPrismaRepository implements UserRepository.Repository {
 
   async assureEmailIsAvailableToUse(email: string): Promise<void> {
     if ((await this.prismaService.user.count({ where: { email } })) !== 0) {
-      throw new UserWithEmailNotFoundError(email);
+      throw new EmailAlreadyInUseError(email);
     }
   }
 
