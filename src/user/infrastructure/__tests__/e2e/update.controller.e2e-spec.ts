@@ -1,5 +1,5 @@
 import { SignUpDto } from '@/user/infrastructure/dtos/sign-up.dto';
-import { faker } from '@faker-js/faker';
+import { en, faker } from '@faker-js/faker';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserRepository } from '@/user/domain/repositories/user.repository';
@@ -12,13 +12,17 @@ import request from 'supertest';
 import { UserController } from '@/user/infrastructure/user.controller';
 import { instanceToPlain } from 'class-transformer';
 import { applyGlobalConfig } from '@/global-config';
+import { UpdateUserDto } from '@/user/infrastructure/dtos/update-user.dto';
+import { UserEntity } from '@/user/domain/entities/user.entity';
+import { UserDataBuilder } from '@/user/domain/testing/helper/user-data-builder';
 
-describe('UserController e2e tests', () => {
+describe('Update user e2e tests', () => {
   let app: INestApplication;
   let module: TestingModule;
   let repository: UserRepository.Repository;
-  let signUpDto: SignUpDto;
+  let updateUserDto: UpdateUserDto;
   const prismaService = new PrismaClient();
+  let entity: UserEntity;
 
   beforeAll(async () => {
     setUpPrismaTest();
@@ -38,20 +42,22 @@ describe('UserController e2e tests', () => {
   });
 
   beforeEach(async () => {
-    signUpDto = {
+    updateUserDto = {
       name: faker.person.fullName(),
-      email: faker.internet.email(),
-      password: faker.internet.password(),
     };
 
     await prismaService.user.deleteMany();
+
+    entity = new UserEntity(UserDataBuilder({}));
+
+    await prismaService.user.create({ data: entity.toJSON() });
   });
 
-  it('should create a user', async () => {
+  it('should update a user', async () => {
     const response = await request(app.getHttpServer())
-      .post('/user')
-      .send(signUpDto)
-      .expect(201);
+      .put(`/user/${entity.id}`)
+      .send(updateUserDto)
+      .expect(200);
 
     expect(response.body).toHaveProperty('data');
 
@@ -64,8 +70,8 @@ describe('UserController e2e tests', () => {
 
     expect(response.body.data).toMatchObject({
       id: expect.any(String),
-      name: signUpDto.name,
-      email: signUpDto.email,
+      name: updateUserDto.name,
+      email: entity.email,
       createdAt: expect.any(String),
     });
 
@@ -77,9 +83,9 @@ describe('UserController e2e tests', () => {
     expect(response.body.data).toStrictEqual(serialized);
   });
 
-  it('should return error when no parameter in body', async () => {
+  it('should return error when parameters are empty', async () => {
     const response = await request(app.getHttpServer())
-      .post('/user')
+      .put(`/user/${entity.id}`)
       .send()
       .expect(422);
 
@@ -87,100 +93,37 @@ describe('UserController e2e tests', () => {
 
     expect(response.body).toMatchObject({
       error: 'Unprocessable Entity',
-      message: [
-        'name should not be empty',
-        'name must be a string',
-        'email must be an email',
-        'email should not be empty',
-        'email must be a string',
-        'password should not be empty',
-        'password must be a string',
-      ],
-      statusCode: 422,
+      message: ['name should not be empty', 'name must be a string'],
     });
   });
 
-  it('should return error when name is not a string', async () => {
+  it('should return error when name is not string', async () => {
     const response = await request(app.getHttpServer())
-      .post('/user')
-      .send({
-        ...signUpDto,
-        name: 123 as any,
-      })
+      .put(`/user/${entity.id}`)
+      .send({ name: 123 })
       .expect(422);
 
     expect(response.body).toHaveProperty('error');
+
     expect(response.body).toMatchObject({
       error: 'Unprocessable Entity',
       message: ['name must be a string'],
-      statusCode: 422,
     });
   });
 
-  it('should return error when email is not valid', async () => {
+  it('should return error when user not found', async () => {
+    const id = faker.string.uuid();
+
     const response = await request(app.getHttpServer())
-      .post('/user')
-      .send({
-        ...signUpDto,
-        email: 'invalid-email',
-      })
-      .expect(422);
+      .put(`/user/${id}`)
+      .send(updateUserDto)
+      .expect(404);
 
     expect(response.body).toHaveProperty('error');
+
     expect(response.body).toMatchObject({
-      error: 'Unprocessable Entity',
-      message: ['email must be an email'],
-      statusCode: 422,
-    });
-  });
-
-  it('should return error when password is not a string', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/user')
-      .send({
-        ...signUpDto,
-        password: {} as any,
-      })
-      .expect(422);
-
-    expect(response.body).toHaveProperty('error');
-    expect(response.body).toMatchObject({
-      error: 'Unprocessable Entity',
-      message: ['password must be a string'],
-      statusCode: 422,
-    });
-  });
-
-  it('should return error with invalid propriety', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/user')
-      .send({
-        ...signUpDto,
-        invalid: 'invalid',
-      })
-      .expect(422);
-
-    expect(response.body).toHaveProperty('error');
-    expect(response.body).toMatchObject({
-      error: 'Unprocessable Entity',
-      message: ['property invalid should not exist'],
-      statusCode: 422,
-    });
-  });
-
-  it('should return error when the email is duplicated', async () => {
-    await prismaService.user.create({ data: signUpDto });
-    const response = await request(app.getHttpServer())
-      .post('/user')
-      .send({
-        ...signUpDto,
-      })
-      .expect(409);
-
-    expect(response.body).toHaveProperty('error');
-    expect(response.body).toMatchObject({
-      error: 'Conflict',
-      message: `User with email ${signUpDto.email} already exists`,
+      error: 'Not Found',
+      message: `User having id ${id} not found`,
     });
   });
 });
