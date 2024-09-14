@@ -11,7 +11,7 @@ import { UpdatePasswordDto } from '@/user/infrastructure/dtos/update-password.dt
 import { UserCollectionPresenter, UserPresenter } from '@/user/infrastructure/presenters/user.presenter';
 import { ListUsersUsecase } from '@/user/application/usecases/list-users.usecase';
 
-describe('UserController tests', () => {
+describe('UserController unit tests', () => {
   let sut: UserController;
   let id: string;
   let props: UserOutput;

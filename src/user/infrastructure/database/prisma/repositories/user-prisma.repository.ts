@@ -25,7 +25,7 @@ export class UserPrismaRepository implements UserRepository.Repository {
   }
 
   async assureEmailIsAvailableToUse(email: string): Promise<void> {
-    if ((await this.prismaService.user.count({ where: { email } })) === 0) {
+    if ((await this.prismaService.user.count({ where: { email } })) !== 0) {
       throw new UserWithEmailNotFoundError(email);
     }
   }
