@@ -8,6 +8,8 @@ import { ListUsersDto } from '@/user/infrastructure/dtos/list-users.dto';
 import { UpdateUserDto } from '@/user/infrastructure/dtos/update-user.dto';
 import { faker } from '@faker-js/faker';
 import { UpdatePasswordDto } from '@/user/infrastructure/dtos/update-password.dto';
+import { UserCollectionPresenter, UserPresenter } from '@/user/infrastructure/presenters/user.presenter';
+import { ListUsersUsecase } from '@/user/application/usecases/list-users.usecase';
 
 describe('UserController tests', () => {
   let sut: UserController;
@@ -40,8 +42,9 @@ describe('UserController tests', () => {
       password: props.password,
     };
 
-    const result = await sut.create(input);
-    expect(output).toMatchObject(result);
+    const presenter = await sut.create(input);
+    expect(presenter).toBeInstanceOf(UserPresenter);
+    expect(presenter).toMatchObject(new UserPresenter(output));
     expect(mockSignUpUseCase.execute).toHaveBeenCalledWith(input);
   });
 
@@ -54,22 +57,32 @@ describe('UserController tests', () => {
 
     const input: SignInDto = { email: props.email, password: 'password123' };
 
-    const result = await sut.login(input);
-    expect(result).toMatchObject(props);
+    const presenter = await sut.login(input);
+    expect(presenter).toBeInstanceOf(UserPresenter);
+    expect(presenter).toMatchObject(new UserPresenter(props));
     expect(mockSignInUseCase.execute).toHaveBeenCalledWith(input);
   });
 
   it('should list users', async () => {
     const users = [props];
+    const output: ListUsersUsecase.Output = {
+      items: users,
+      currentPage: 1,
+      lastPage: 1,
+      perPage: 10,
+      total: 1,
+    }
+
     const mockListUsersUseCase = {
-      execute: jest.fn().mockResolvedValue(Promise.resolve(users)),
+      execute: jest.fn().mockResolvedValue(Promise.resolve(output)),
     };
 
     sut['listUsersUseCase'] = mockListUsersUseCase as any;
 
     const input: ListUsersDto = {};
-    const result = await sut.search(input);
-    expect(result).toEqual(users);
+    const presenter = await sut.search(input);
+    expect(presenter).toBeInstanceOf(UserCollectionPresenter);
+    expect(presenter).toEqual(new UserCollectionPresenter(output));
     expect(mockListUsersUseCase.execute).toHaveBeenCalledWith(input);
   });
 
@@ -80,8 +93,9 @@ describe('UserController tests', () => {
 
     sut['getUserUseCase'] = mockGetUserUseCase as any;
 
-    const result = await sut.findOne(id);
-    expect(result).toEqual(props);
+    const presenter = await sut.findOne(id);
+    expect(presenter).toBeInstanceOf(UserPresenter);
+    expect(presenter).toMatchObject(new UserPresenter(props));
   });
 
   it('should update user data', async () => {
@@ -94,8 +108,9 @@ describe('UserController tests', () => {
 
     const input: UpdateUserDto = { name: updatedProps.name };
 
-    const result = await sut.update(id, input);
-    expect(result).toEqual(updatedProps);
+    const presenter = await sut.update(id, input);
+    expect(presenter).toBeInstanceOf(UserPresenter);
+    expect(presenter).toMatchObject(new UserPresenter(updatedProps));
     expect(mockUpdateUserUseCase.execute).toHaveBeenCalledWith(input);
   });
 
@@ -111,8 +126,9 @@ describe('UserController tests', () => {
       newPassword: 'new-password',
     };
 
-    const result = await sut.updatePassword(id, input);
-    expect(result).toEqual(props);
+    const presenter = await sut.updatePassword(id, input);
+    expect(presenter).toBeInstanceOf(UserPresenter);
+    expect(presenter).toMatchObject(new UserPresenter(props));
     expect(mockUpdatePasswordUseCase.execute).toHaveBeenCalledWith(input);
   });
 
