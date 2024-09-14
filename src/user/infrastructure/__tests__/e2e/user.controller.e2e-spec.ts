@@ -11,6 +11,7 @@ import { DatabaseModule } from '@/shared/infrastructure/database/database.module
 import request from 'supertest';
 import { UserController } from '@/user/infrastructure/user.controller';
 import { instanceToPlain } from 'class-transformer';
+import { applyGlobalConfig } from '@/global-config';
 
 describe('UserController e2e tests', () => {
   let app: INestApplication;
@@ -30,7 +31,7 @@ describe('UserController e2e tests', () => {
     }).compile();
 
     app = module.createNestApplication();
-
+    applyGlobalConfig(app)
     await app.init();
 
     repository = module.get<UserRepository.Repository>('UserRepository');
