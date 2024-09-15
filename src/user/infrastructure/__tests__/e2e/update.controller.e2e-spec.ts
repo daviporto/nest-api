@@ -15,6 +15,8 @@ import { applyGlobalConfig } from '@/global-config';
 import { UpdateUserDto } from '@/user/infrastructure/dtos/update-user.dto';
 import { UserEntity } from '@/user/domain/entities/user.entity';
 import { UserDataBuilder } from '@/user/domain/testing/helper/user-data-builder';
+import { HashProvider } from '@/shared/application/providers/hash-provider';
+import { BcryptjsHashProvider } from '@/user/infrastructure/providers/hash-provider/bcryptjs-hash.provider';
 
 describe('Update user e2e tests', () => {
   let app: INestApplication;
@@ -23,6 +25,9 @@ describe('Update user e2e tests', () => {
   let updateUserDto: UpdateUserDto;
   const prismaService = new PrismaClient();
   let entity: UserEntity;
+  let hasProvider: HashProvider;
+  let hashPassword: string;
+  let accessToken: string;
 
   beforeAll(async () => {
     setUpPrismaTest();
@@ -39,6 +44,8 @@ describe('Update user e2e tests', () => {
     await app.init();
 
     repository = module.get<UserRepository.Repository>('UserRepository');
+    hasProvider = new BcryptjsHashProvider();
+    hashPassword = await hasProvider.generateHash('password');
   });
 
   beforeEach(async () => {
@@ -48,14 +55,39 @@ describe('Update user e2e tests', () => {
 
     await prismaService.user.deleteMany();
 
-    entity = new UserEntity(UserDataBuilder({}));
+    entity = new UserEntity(
+      UserDataBuilder({
+        password: hashPassword,
+      }),
+    );
 
     await prismaService.user.create({ data: entity.toJSON() });
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/user/login')
+      .send({
+        email: entity.email,
+        password: 'password',
+      })
+      .expect(200);
+
+    accessToken = loginResponse.body.data.token;
+  });
+
+  it('should throw unauthorized when no token sent', async () => {
+    const response = await request(app.getHttpServer())
+      .put(`/user/${entity.id}`)
+      .expect(401)
+      .expect({
+        statusCode: 401,
+        message: 'Unauthorized',
+      });
   });
 
   it('should update a user', async () => {
     const response = await request(app.getHttpServer())
       .put(`/user/${entity.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send(updateUserDto)
       .expect(200);
 
@@ -86,6 +118,7 @@ describe('Update user e2e tests', () => {
   it('should return error when parameters are empty', async () => {
     const response = await request(app.getHttpServer())
       .put(`/user/${entity.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send()
       .expect(422);
 
@@ -101,6 +134,7 @@ describe('Update user e2e tests', () => {
     const response = await request(app.getHttpServer())
       .put(`/user/${entity.id}`)
       .send({ name: 123 })
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(422);
 
     expect(response.body).toHaveProperty('error');
@@ -117,6 +151,7 @@ describe('Update user e2e tests', () => {
     const response = await request(app.getHttpServer())
       .put(`/user/${id}`)
       .send(updateUserDto)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(404);
 
     expect(response.body).toHaveProperty('error');

@@ -15,6 +15,8 @@ import { applyGlobalConfig } from '@/global-config';
 import { UpdateUserDto } from '@/user/infrastructure/dtos/update-user.dto';
 import { UserEntity } from '@/user/domain/entities/user.entity';
 import { UserDataBuilder } from '@/user/domain/testing/helper/user-data-builder';
+import { HashProvider } from '@/shared/application/providers/hash-provider';
+import { BcryptjsHashProvider } from '@/user/infrastructure/providers/hash-provider/bcryptjs-hash.provider';
 
 describe('Find one user e2e tests', () => {
   let app: INestApplication;
@@ -22,6 +24,9 @@ describe('Find one user e2e tests', () => {
   let repository: UserRepository.Repository;
   const prismaService = new PrismaClient();
   let entity: UserEntity;
+  let hasProvider: HashProvider;
+  let hashPassword: string;
+  let accessToken: string;
 
   beforeAll(async () => {
     setUpPrismaTest();
@@ -38,19 +43,46 @@ describe('Find one user e2e tests', () => {
     await app.init();
 
     repository = module.get<UserRepository.Repository>('UserRepository');
+    hasProvider = new BcryptjsHashProvider();
+    hashPassword = await hasProvider.generateHash('password');
   });
 
   beforeEach(async () => {
     await prismaService.user.deleteMany();
 
-    entity = new UserEntity(UserDataBuilder({}));
+    entity = new UserEntity(
+      UserDataBuilder({
+        password: hashPassword,
+      }),
+    );
 
     await prismaService.user.create({ data: entity.toJSON() });
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/user/login')
+      .send({
+        email: entity.email,
+        password: 'password',
+      })
+      .expect(200);
+
+    accessToken = loginResponse.body.data.token;
+  });
+
+  it('should throw unauthorized when no token sent', async () => {
+   await request(app.getHttpServer())
+      .get(`/user/${entity.id}`)
+      .expect(401)
+      .expect({
+        statusCode: 401,
+        message: 'Unauthorized',
+      });
   });
 
   it('should retrieve a user', async () => {
     const response = await request(app.getHttpServer())
       .get(`/user/${entity.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
     expect(response.body).toHaveProperty('data');
@@ -82,6 +114,7 @@ describe('Find one user e2e tests', () => {
 
     const response = await request(app.getHttpServer())
       .get(`/user/${id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send()
       .expect(404);
 

@@ -1,5 +1,3 @@
-import { SignUpDto } from '@/user/infrastructure/dtos/sign-up.dto';
-import { en, faker } from '@faker-js/faker';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserRepository } from '@/user/domain/repositories/user.repository';
@@ -9,14 +7,13 @@ import { UserModule } from '@/user/infrastructure/user.module';
 import { EnvConfigModule } from '@/shared/infrastructure/env-config/env-config.module';
 import { DatabaseModule } from '@/shared/infrastructure/database/database.module';
 import request from 'supertest';
-import { UserController } from '@/user/infrastructure/user.controller';
-import { instanceToPlain } from 'class-transformer';
 import { applyGlobalConfig } from '@/global-config';
-import { UpdateUserDto } from '@/user/infrastructure/dtos/update-user.dto';
 import { UserEntity } from '@/user/domain/entities/user.entity';
 import { UserDataBuilder } from '@/user/domain/testing/helper/user-data-builder';
 import { ListUsersDto } from '@/user/infrastructure/dtos/list-users.dto';
 import { SortOrderEnum } from '@/shared/domain/repositories/searchable-repository-contracts';
+import { HashProvider } from '@/shared/application/providers/hash-provider';
+import { BcryptjsHashProvider } from '@/user/infrastructure/providers/hash-provider/bcryptjs-hash.provider';
 
 describe('List user e2e tests', () => {
   let app: INestApplication;
@@ -24,6 +21,9 @@ describe('List user e2e tests', () => {
   let repository: UserRepository.Repository;
   let ListUsersDto: ListUsersDto;
   const prismaService = new PrismaClient();
+  let hasProvider: HashProvider;
+  let hashPassword: string;
+  let accessToken: string;
 
   beforeAll(async () => {
     setUpPrismaTest();
@@ -40,10 +40,38 @@ describe('List user e2e tests', () => {
     await app.init();
 
     repository = module.get<UserRepository.Repository>('UserRepository');
+    hasProvider = new BcryptjsHashProvider();
+    hashPassword = await hasProvider.generateHash('password');
   });
 
   beforeEach(async () => {
     await prismaService.user.deleteMany();
+
+    const entity = new UserEntity(
+      UserDataBuilder({
+        name: 'ZZ',
+        password: hashPassword,
+      }),
+    );
+
+    await prismaService.user.create({ data: entity.toJSON() });
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/user/login')
+      .send({
+        email: entity.email,
+        password: 'password',
+      })
+      .expect(200);
+
+    accessToken = loginResponse.body.data.token;
+  });
+
+  it('should throw unauthorized when no token sent', async () => {
+    await request(app.getHttpServer()).get(`/user`).expect(401).expect({
+      statusCode: 401,
+      message: 'Unauthorized',
+    });
   });
 
   it('should return users in first page with default sorting', async () => {
@@ -63,13 +91,14 @@ describe('List user e2e tests', () => {
 
     const response = await request(app.getHttpServer())
       .get(`/user`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
     const users = response.body.data;
     const meta = response.body.meta;
 
     expect(users).toHaveLength(10);
-    expect(meta.total).toBe(11);
+    expect(meta.total).toBe(11 + 1); // + 1used to log in
 
     for (let i = 0; i < 11; i++) {
       const referenceUser = users.find(
@@ -88,10 +117,10 @@ describe('List user e2e tests', () => {
 
   it('should filter, sort and paginate', async () => {
     const users = [
-      new UserEntity(UserDataBuilder({ name: 'AA'})),
-      new UserEntity(UserDataBuilder({ name: 'AB'})),
-      new UserEntity(UserDataBuilder({ name: 'AC'})),
-      new UserEntity(UserDataBuilder({ name: 'DD'})),
+      new UserEntity(UserDataBuilder({ name: 'AA' })),
+      new UserEntity(UserDataBuilder({ name: 'AB' })),
+      new UserEntity(UserDataBuilder({ name: 'AC' })),
+      new UserEntity(UserDataBuilder({ name: 'DD' })),
     ];
 
     for (const user of users) {
@@ -108,6 +137,7 @@ describe('List user e2e tests', () => {
 
     const response = await request(app.getHttpServer())
       .get(`/user`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .query(queryParams)
       .expect(200);
 
@@ -122,17 +152,16 @@ describe('List user e2e tests', () => {
     expect(meta.lastPage).toBe(2);
     expect(meta.perPage).toBe(2);
     expect(meta.total).toBe(3);
-
   });
 
   it('should return a error with invalid fields', async () => {
     const res = await request(app.getHttpServer())
       .get('/user')
+      .set('Authorization', `Bearer ${accessToken}`)
       .query({ invalid: 'invalid' })
-      .expect(422)
+      .expect(422);
 
-    expect(res.body.error).toBe('Unprocessable Entity')
-    expect(res.body.message).toEqual(['property invalid should not exist'])
-  })
-
+    expect(res.body.error).toBe('Unprocessable Entity');
+    expect(res.body.message).toEqual(['property invalid should not exist']);
+  });
 });
