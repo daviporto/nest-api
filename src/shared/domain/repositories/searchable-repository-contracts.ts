@@ -96,6 +96,10 @@ export class SearchParams<Filter = string> {
       _page = defaultInitialPage;
     }
 
+    if (typeof _page == 'string') {
+      _page = parseInt(_page as any);
+    }
+
     this._page = _page;
   }
 
@@ -109,9 +113,13 @@ export class SearchParams<Filter = string> {
     if (
       Number.isNaN(_perPage) ||
       _perPage < 1 ||
-      parseInt(_perPage as any) !== _perPage
+      parseInt(_perPage as any) != _perPage
     ) {
       _perPage = defaultPerPage;
+    }
+
+    if (typeof perPage === 'string') {
+      _perPage = parseInt(_perPage as any);
     }
 
     this._perPage = _perPage;

@@ -16,7 +16,7 @@ export class ListUsersDto implements ListUsersUsecase.Input {
   sort?: string | null;
 
   @IsOptional()
-  @IsIn([SortOrderEnum.ASC, SortOrderEnum.DESC])
+  // @IsIn([SortOrderEnum.ASC, SortOrderEnum.DESC])
   sortDir?: SortOrderEnum | null;
 
   @IsOptional()

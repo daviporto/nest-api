@@ -11,6 +11,7 @@ import { UserRepository } from '@/user/domain/repositories/user.repository';
 import { SortOrderEnum } from '@/shared/domain/repositories/searchable-repository-contracts';
 import { UserWithEmailNotFoundError } from '@/user/domain/errors/user-with-email-not-found-error';
 import { UserWithIdNotFoundError } from '@/user/infrastructure/errors/user-with-id-not-found-error';
+import { EmailAlreadyInUseError } from '@/user/domain/errors/email-already-in-use-error';
 
 describe('User prisma repository integration tests', () => {
   const prismaService = new PrismaClient();
@@ -76,7 +77,7 @@ describe('User prisma repository integration tests', () => {
     expect(users[0].toJSON()).toStrictEqual(entity.toJSON());
   });
 
-  it('should return all users', async () => {
+  it('should return users paginated', async () => {
     const entities = [];
     for (let i = 0; i < 3; i++) {
       const entity = new UserEntity(UserDataBuilder({}));
@@ -162,7 +163,7 @@ describe('User prisma repository integration tests', () => {
     );
   });
 
-  it('should not throw error if email is already in use', async () => {
+  it('should throw error if email is already in use', async () => {
     const entity = new UserEntity(
       UserDataBuilder({ email: 'john@example.com' }),
     );
@@ -170,15 +171,13 @@ describe('User prisma repository integration tests', () => {
 
     await expect(
       sut.assureEmailIsAvailableToUse(entity.email),
-    ).resolves.not.toThrow();
+    ).rejects.toThrow(new EmailAlreadyInUseError(entity.email));
   });
 
-  it('should throw error if email is not available to use', async () => {
+  it('should not throw error if email is available to use', async () => {
     await expect(
       sut.assureEmailIsAvailableToUse('non-existent@example.com'),
-    ).rejects.toThrowError(
-      new UserWithEmailNotFoundError('non-existent@example.com'),
-    );
+    ).resolves.not.toThrow();
   });
 
   describe('search tests', () => {

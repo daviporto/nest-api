@@ -44,23 +44,25 @@ describe('ConflictErrorFilter', () => {
     expect(new NotFoundErrorFilter()).toBeDefined();
   });
 
-  it('should catch id error correctly', () => {
-    request(app.getHttpServer())
+  it('should catch id error correctly', async () => {
+    await request(app.getHttpServer())
       .get('/stub/id')
-      .expect(409)
+      .expect(404)
       .expect({
-        error: 'Conflict',
+        statusCode: 404,
+        error: 'Not Found',
         message: `User having id ${id} not found`,
       });
   });
 
-  it('should catch email error correctly', () => {
-    request(app.getHttpServer())
+  it('should catch email error correctly', async () => {
+    await request(app.getHttpServer())
       .get('/stub/email')
-      .expect(409)
+      .expect(404)
       .expect({
-        error: 'Conflict',
-        message: `User having email ${email} not found`,
+        statusCode: 404,
+        error: 'Not Found',
+        message: `User with email ${email} not found`,
       });
   });
 });

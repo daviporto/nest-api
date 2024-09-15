@@ -38,14 +38,14 @@ describe('ConflictErrorFilter', () => {
     expect(new ConflictErrorFilter()).toBeDefined();
   });
 
-  it('should catch error correctly', () => {
-    request(app.getHttpServer())
+  it('should catch error correctly', async () => {
+    await request(app.getHttpServer())
       .get('/stub')
       .expect(409)
       .expect({
+        statusCode: 409,
         error: 'Conflict',
-        message: `Email ${email} is already in use`,
-      })
+        message: `User with email ${email} already exists`,
+      });
   });
-
 });

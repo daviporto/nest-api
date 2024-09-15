@@ -47,6 +47,6 @@ describe('Update user usecase integration tests', () => {
     const newName = faker.person.fullName();
     const output = await sut.execute({ id: user.id, name: newName });
 
-    expect(output.name).toMatchObject(newName);
+    expect(output.name).toBe(newName);
   });
 });
