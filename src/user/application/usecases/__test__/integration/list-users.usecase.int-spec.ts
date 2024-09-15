@@ -35,7 +35,6 @@ describe('List users usecase integration tests', () => {
   });
 
   it('should retrieve users orderedBy createdAt as default', async () => {
-    const createdAtTime = new Date().getTime();
     const entities = [];
     for (let i = 0; i < 11; i++) {
       const entity = new UserEntity(UserDataBuilder({}));
