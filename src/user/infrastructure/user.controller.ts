@@ -28,6 +28,8 @@ import {
   UserCollectionPresenter,
   UserPresenter,
 } from '@/user/infrastructure/presenters/user.presenter';
+import { AuthService } from '@/auth/infrastructure/auth.service';
+import { LogInUserPresenter } from '@/user/infrastructure/presenters/log-in-user.presenter';
 
 @Controller('user')
 export class UserController {
@@ -52,6 +54,9 @@ export class UserController {
   @Inject(DeleteUserUsecase.UseCase)
   private deleteUserUseCase: DeleteUserUsecase.UseCase;
 
+  @Inject(AuthService)
+  private authService: AuthService;
+
   static userToResponse(output: UserOutput): UserPresenter {
     return new UserPresenter(output);
   }
@@ -73,8 +78,9 @@ export class UserController {
   @Post('login')
   async login(@Body() signIn: SignInDto) {
     const output = await this.singInUseCase.execute(signIn);
+    const token = await this.authService.generateJwt(output.id);
 
-    return UserController.userToResponse(output);
+    return new LogInUserPresenter(output, token.accessToken);
   }
 
   @Get()
