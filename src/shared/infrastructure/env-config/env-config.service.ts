@@ -4,8 +4,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class EnvConfigService implements EnvConfig {
-  constructor(private configService: ConfigService) {
-  }
+  constructor(private configService: ConfigService) {}
 
   getAppPort(): Number {
     return Number(this.configService.get<number>('APP_PORT'));
@@ -13,5 +12,13 @@ export class EnvConfigService implements EnvConfig {
 
   getNodeEnv(): string {
     return this.configService.get<string>('NODE_ENV');
+  }
+
+  getJwtSecret(): string {
+    return this.configService.get<string>('JWT_SECRET');
+  }
+
+  getJwtExpiresIn(): number {
+    return this.configService.get<number>('JWT_EXPIRES_IN');
   }
 }
