@@ -8,8 +8,12 @@ import { ListUsersDto } from '@/user/infrastructure/dtos/list-users.dto';
 import { UpdateUserDto } from '@/user/infrastructure/dtos/update-user.dto';
 import { faker } from '@faker-js/faker';
 import { UpdatePasswordDto } from '@/user/infrastructure/dtos/update-password.dto';
-import { UserCollectionPresenter, UserPresenter } from '@/user/infrastructure/presenters/user.presenter';
+import {
+  UserCollectionPresenter,
+  UserPresenter,
+} from '@/user/infrastructure/presenters/user.presenter';
 import { ListUsersUsecase } from '@/user/application/usecases/list-users.usecase';
+import { LogInUserPresenter } from '@/user/infrastructure/presenters/log-in-user.presenter';
 
 describe('UserController unit tests', () => {
   let sut: UserController;
@@ -49,18 +53,28 @@ describe('UserController unit tests', () => {
   });
 
   it('should log in a user', async () => {
+    const token = faker.string.alphanumeric();
+
     const mockSignInUseCase = {
       execute: jest.fn().mockResolvedValue(Promise.resolve(props)),
     };
 
+    const mockAuthService = {
+      generateJwt: jest
+        .fn()
+        .mockResolvedValue(Promise.resolve({ accessToken: token })),
+    };
+
     sut['singInUseCase'] = mockSignInUseCase as any;
+    sut['authService'] = mockAuthService as any;
 
     const input: SignInDto = { email: props.email, password: 'password123' };
 
     const presenter = await sut.login(input);
-    expect(presenter).toBeInstanceOf(UserPresenter);
-    expect(presenter).toMatchObject(new UserPresenter(props));
+    expect(presenter).toBeInstanceOf(LogInUserPresenter);
+    expect(presenter).toMatchObject(new LogInUserPresenter(props, token));
     expect(mockSignInUseCase.execute).toHaveBeenCalledWith(input);
+    expect(mockAuthService.generateJwt).toHaveBeenCalled();
   });
 
   it('should list users', async () => {
@@ -71,7 +85,7 @@ describe('UserController unit tests', () => {
       lastPage: 1,
       perPage: 10,
       total: 1,
-    }
+    };
 
     const mockListUsersUseCase = {
       execute: jest.fn().mockResolvedValue(Promise.resolve(output)),

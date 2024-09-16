@@ -28,6 +28,7 @@ describe('Update user e2e tests', () => {
   const hashProvider: HashProvider = new BcryptjsHashProvider();
   let entity: UserEntity;
   const oldPassword = faker.internet.password();
+  let accessToken: string;
 
   beforeAll(async () => {
     setUpPrismaTest();
@@ -61,11 +62,32 @@ describe('Update user e2e tests', () => {
     );
 
     await prismaService.user.create({ data: entity.toJSON() });
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/user/login')
+      .send({
+        email: entity.email,
+        password: oldPassword,
+      })
+      .expect(200);
+
+    accessToken = loginResponse.body.data.token;
+  });
+
+  it('should throw unauthorized when no token sent', async () => {
+    await request(app.getHttpServer())
+      .patch(`/user/${entity.id}/password`)
+      .expect(401)
+      .expect({
+        statusCode: 401,
+        message: 'Unauthorized',
+      });
   });
 
   it('should update a user password', async () => {
     const response = await request(app.getHttpServer())
       .patch(`/user/${entity.id}/password`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send(updatePasswordDto)
       .expect(200);
 
@@ -97,6 +119,7 @@ describe('Update user e2e tests', () => {
   it('should return error when parameters are empty', async () => {
     const response = await request(app.getHttpServer())
       .patch(`/user/${entity.id}/password`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send()
       .expect(422);
 
@@ -116,6 +139,7 @@ describe('Update user e2e tests', () => {
   it('should return error when parameter are in wrong format', async () => {
     const response = await request(app.getHttpServer())
       .patch(`/user/${entity.id}/password`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send({ oldPassword: 123, newPassword: 123 })
       .expect(422);
 
@@ -132,6 +156,7 @@ describe('Update user e2e tests', () => {
 
     const response = await request(app.getHttpServer())
       .patch(`/user/${id}/password`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send(updatePasswordDto)
       .expect(404);
 
@@ -146,6 +171,7 @@ describe('Update user e2e tests', () => {
   it('should return error when old password is not right', async () => {
     const response = await request(app.getHttpServer())
       .patch(`/user/${entity.id}/password`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send({
         oldPassword: faker.string.uuid(),
         newPassword: updatePasswordDto.newPassword,

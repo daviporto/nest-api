@@ -10,6 +10,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { SignUpDto } from '@/user/infrastructure/dtos/sign-up.dto';
 import { SignupUsecase } from '@/user/application/usecases/sign-up.usecase';
@@ -28,7 +29,17 @@ import {
   UserCollectionPresenter,
   UserPresenter,
 } from '@/user/infrastructure/presenters/user.presenter';
+import { AuthService } from '@/auth/infrastructure/auth.service';
+import { LogInUserPresenter } from '@/user/infrastructure/presenters/log-in-user.presenter';
+import { AuthGuard } from '@/auth/infrastructure/auth.guard';
+import {
+  ApiBearerAuth,
+  ApiResponse,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
 
+@ApiTags('user')
 @Controller('user')
 export class UserController {
   @Inject(SignupUsecase.UseCase)
@@ -52,6 +63,9 @@ export class UserController {
   @Inject(DeleteUserUsecase.UseCase)
   private deleteUserUseCase: DeleteUserUsecase.UseCase;
 
+  @Inject(AuthService)
+  private authService: AuthService;
+
   static userToResponse(output: UserOutput): UserPresenter {
     return new UserPresenter(output);
   }
@@ -62,6 +76,8 @@ export class UserController {
     return new UserCollectionPresenter(output);
   }
 
+  @ApiResponse({ status: 409, description: 'Email already in use' })
+  @ApiResponse({ status: 422, description: 'Unprocessable Entity' })
   @Post()
   async create(@Body() signUpDto: SignUpDto) {
     const output = await this.signUpUseCase.execute(signUpDto);
@@ -69,14 +85,42 @@ export class UserController {
     return UserController.userToResponse(output);
   }
 
+  @ApiResponse({ status: 422, description: 'Unprocessable Entity' })
   @HttpCode(200)
   @Post('login')
   async login(@Body() signIn: SignInDto) {
     const output = await this.singInUseCase.execute(signIn);
+    const token = await this.authService.generateJwt(output.id);
 
-    return UserController.userToResponse(output);
+    return new LogInUserPresenter(output, token.accessToken);
   }
 
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: 'object',
+      properties: {
+        meta: {
+          type: 'object',
+          properties: {
+            totalItems: { type: 'number' },
+            itemCount: { type: 'number' },
+            itemsPerPage: { type: 'number' },
+            totalPages: { type: 'number' },
+            currentPage: { type: 'number' },
+          },
+        },
+        data: {
+          type: 'array',
+          items: { $ref: getSchemaPath(UserPresenter) },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 422, description: 'Unprocessable Entity' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @UseGuards(AuthGuard)
   @Get()
   async search(@Query() searchParams: ListUsersDto) {
     const result = await this.listUsersUseCase.execute(searchParams);
@@ -84,6 +128,10 @@ export class UserController {
     return UserController.listUserToResponse(result);
   }
 
+  @ApiBearerAuth()
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @UseGuards(AuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const output = await this.getUserUseCase.execute({ id });
@@ -91,6 +139,11 @@ export class UserController {
     return UserController.userToResponse(output);
   }
 
+  @ApiBearerAuth()
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 422, description: 'Unprocessable Entity' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @UseGuards(AuthGuard)
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     const output = await this.updateUserUseCase.execute({
@@ -101,6 +154,11 @@ export class UserController {
     return UserController.userToResponse(output);
   }
 
+  @ApiBearerAuth()
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 422, description: 'Unprocessable Entity' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @UseGuards(AuthGuard)
   @Patch(':id/password')
   async updatePassword(
     @Param('id') id: string,
@@ -114,6 +172,11 @@ export class UserController {
     return UserController.userToResponse(output);
   }
 
+  @ApiBearerAuth()
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 204, description: 'User deleted' })
+  @UseGuards(AuthGuard)
   @HttpCode(204)
   @Delete(':id')
   async remove(@Param('id') id: string) {
