@@ -18,13 +18,13 @@ async function bootstrap() {
     .setDescription(
       'The Nest Api support creating deleting editing and authenticating users',
     )
-    .setVersion('1.0')
+    .setVersion('1.0.0')
     .addBearerAuth({
       name: 'Authorization',
       description: 'JWT token',
-      in: 'header',
+      in: 'Header',
       type: 'http',
-      scheme: 'bearer',
+      scheme: 'Bearer',
     })
     .build();
 

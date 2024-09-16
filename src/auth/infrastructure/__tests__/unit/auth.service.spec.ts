@@ -22,7 +22,7 @@ describe('Auth service unit tests', () => {
   beforeEach(() => {
     jwtService = new JwtService({
       global: true,
-      secret: 'my_secret',
+      secret: 'test',
       signOptions: { expiresIn: 60 * 60, subject: 'test' },
     });
 
