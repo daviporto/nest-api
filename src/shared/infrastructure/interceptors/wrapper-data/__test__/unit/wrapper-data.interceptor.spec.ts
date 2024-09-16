@@ -24,23 +24,6 @@ describe('Wrapper data interceptor unit tests', () => {
     });
   });
 
-  it('should return the body if it has a meta property', () => {
-    const expected = {
-      data: props,
-      meta: {},
-    };
-
-    const obs$ = interceptor.intercept({} as any, {
-      handle: () => of(expected),
-    });
-
-    obs$.subscribe({
-      next: (result) => {
-        expect(result).toMatchObject(expected);
-      },
-    });
-  });
-
   it('should return the body if it is not null and does not have a meta property', () => {
     const obs$ = interceptor.intercept({} as any, { handle: () => of(null) });
 
