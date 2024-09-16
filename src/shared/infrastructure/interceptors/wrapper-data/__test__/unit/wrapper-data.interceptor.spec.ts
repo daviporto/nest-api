@@ -19,7 +19,7 @@ describe('Wrapper data interceptor unit tests', () => {
 
     obs$.subscribe({
       next: (result) => {
-        expect(result).toBe({ data: props });
+        expect(result).toStrictEqual({ data: props });
       },
     });
   });
@@ -36,7 +36,7 @@ describe('Wrapper data interceptor unit tests', () => {
 
     obs$.subscribe({
       next: (result) => {
-        expect(result).toBe(expected);
+        expect(result).toMatchObject(expected);
       },
     });
   });

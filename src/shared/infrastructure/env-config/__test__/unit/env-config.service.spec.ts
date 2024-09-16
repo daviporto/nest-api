@@ -27,10 +27,10 @@ describe('EnvConfigService unit tests', () => {
   });
 
   it('should return jwt secret', () => {
-    expect(sut.getNodeEnv()).toBe('my_secret');
+    expect(sut.getJwtSecret()).toBe('test');
   });
 
   it('should return jwt expires in', () => {
-    expect(sut.getNodeEnv()).toBe(60 * 60);
+    expect(sut.getJwtExpiresIn()).toBe(`${60 * 60}`);
   });
 });

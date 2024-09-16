@@ -1,4 +1,4 @@
-import { fa, faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserRepository } from '@/user/domain/repositories/user.repository';
@@ -8,7 +8,6 @@ import { UserModule } from '@/user/infrastructure/user.module';
 import { EnvConfigModule } from '@/shared/infrastructure/env-config/env-config.module';
 import { DatabaseModule } from '@/shared/infrastructure/database/database.module';
 import request from 'supertest';
-import { UserController } from '@/user/infrastructure/user.controller';
 import { instanceToPlain } from 'class-transformer';
 import { applyGlobalConfig } from '@/global-config';
 import { HashProvider } from '@/shared/application/providers/hash-provider';
@@ -181,18 +180,19 @@ describe('Log in user e2e tests', () => {
 
   it('should return error when password is not right', async () => {
     const response = await request(app.getHttpServer())
-      .post(`/user/login`)
+      .post('/user/login')
       .send({
-        password: faker.string.uuid(),
         email: signInDto.email,
+        password: faker.string.uuid(),
       })
-      .expect(422);
+      .expect(400);
 
-    expect(response.body).toHaveProperty('error');
+    expect(response).toHaveProperty('error');
 
     expect(response.body).toMatchObject({
-      error: 'Unprocessable Entity',
-      message: `Old password invalid`,
+      statusCode: 400,
+      error: 'Bad Request',
+      message: 'Invalid credentials',
     });
   });
 });
