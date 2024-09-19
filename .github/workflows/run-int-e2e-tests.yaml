@@ -1,6 +1,6 @@
 name: Ci - Int E2E Tests
 
-on: [pull_request]
+on: [pull_request, pull_request_review, push]
 
 services:
   postgres:
