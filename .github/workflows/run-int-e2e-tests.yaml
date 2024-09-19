@@ -38,9 +38,6 @@ jobs:
       - name: Generate prisma
         run: npm run prisma:generate
 
-      - name: Run unit tests
-        run: npm run test:unit
-
       - name: Run int tests
         run: npm run test:int
 
