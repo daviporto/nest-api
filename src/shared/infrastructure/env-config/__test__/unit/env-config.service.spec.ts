@@ -31,6 +31,6 @@ describe('EnvConfigService unit tests', () => {
   });
 
   it('should return jwt expires in', () => {
-    expect(sut.getJwtExpiresIn()).toBe(`${60 * 60 * 10000}`);
+    expect(sut.getJwtExpiresIn()).toBe(`${60 * 60 * 1000}`);
   });
 });
