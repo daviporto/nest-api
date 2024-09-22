@@ -1,0 +1,341 @@
+openapi: 3.0.0
+paths:
+  /user:
+    post:
+      operationId: UserController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPresenter'
+        '409':
+          description: Email already in use
+        '422':
+          description: Unprocessable Entity
+      tags:
+        - user
+    get:
+      operationId: UserController_search
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: The page number
+          schema:
+            type: number
+        - name: perPage
+          required: false
+          in: query
+          description: The number of items per page
+          schema:
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: The field that should be used for sorting
+          schema:
+            nullable: true
+            enum:
+              - name
+              - createdAt
+            type: string
+        - name: sortDir
+          required: false
+          in: query
+          description: The sort direction
+          schema:
+            nullable: true
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: filter
+          required: false
+          in: query
+          description: The filter to apply to the search
+          schema:
+            nullable: true
+            enum:
+              - name
+              - email
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      totalItems:
+                        type: number
+                      itemCount:
+                        type: number
+                      itemsPerPage:
+                        type: number
+                      totalPages:
+                        type: number
+                      currentPage:
+                        type: number
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserPresenter'
+        '401':
+          description: Unauthorized
+        '422':
+          description: Unprocessable Entity
+      tags:
+        - user
+      security:
+        - bearer: []
+  /user/login:
+    post:
+      operationId: UserController_login
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogInUserPresenter'
+        '422':
+          description: Unprocessable Entity
+      tags:
+        - user
+  /user/{id}:
+    get:
+      operationId: UserController_findOne
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPresenter'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+      tags:
+        - user
+      security:
+        - bearer: []
+    put:
+      operationId: UserController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPresenter'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '422':
+          description: Unprocessable Entity
+      tags:
+        - user
+      security:
+        - bearer: []
+    delete:
+      operationId: UserController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+      tags:
+        - user
+      security:
+        - bearer: []
+  /user/{id}/password:
+    patch:
+      operationId: UserController_updatePassword
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePasswordDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPresenter'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '422':
+          description: Unprocessable Entity
+      tags:
+        - user
+      security:
+        - bearer: []
+info:
+  title: Nest Auth Api
+  description: The Nest Api support creating deleting editing and authenticating users
+  version: 1.0.0
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    bearer:
+      scheme: Bearer
+      bearerFormat: JWT
+      name: Authorization
+      description: JWT token
+      in: Header
+      type: http
+  schemas:
+    SignUpDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the user
+        email:
+          type: string
+          description: The email of the user
+        password:
+          type: string
+          description: The password of the user
+      required:
+        - name
+        - email
+        - password
+    UserPresenter:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the user
+        name:
+          type: string
+          description: The name of the user
+        email:
+          type: string
+          description: The email of the user
+        createdAt:
+          format: date-time
+          type: string
+          description: The date when the user was created
+      required:
+        - id
+        - name
+        - email
+        - createdAt
+    SignInDto:
+      type: object
+      properties:
+        email:
+          type: string
+          description: The email of the user
+        password:
+          type: string
+          description: The password of the user
+      required:
+        - email
+        - password
+    LogInUserPresenter:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the user
+        name:
+          type: string
+          description: The name of the user
+        email:
+          type: string
+          description: The email of the user
+        createdAt:
+          format: date-time
+          type: string
+          description: The date when the user was created
+        token:
+          type: string
+          description: The token of the user
+      required:
+        - id
+        - name
+        - email
+        - createdAt
+        - token
+    UpdateUserDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the user
+      required:
+        - name
+    UpdatePasswordDto:
+      type: object
+      properties:
+        oldPassword:
+          type: string
+          description: The old password of the user
+        newPassword:
+          type: string
+          description: The new password of the user
+      required:
+        - oldPassword
+        - newPassword
