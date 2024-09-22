@@ -1,0 +1,83 @@
+### Create user
+POST {{host}}/user
+Content-Type: application/json
+
+{
+  "name": "Test user",
+  "email": "test@user.com",
+  "password": "password"
+}
+> {%
+  client.test('sucess response', () => {
+    client.assert(response.status === 201, 'response status is not 201')
+  })
+%}
+
+### login
+POST {{host}}/user/login
+Content-Type: application/json
+
+{
+  "email": "test@user.com",
+  "password": "password"
+}
+> {%
+  client.test('sucess response', () => {
+    client.assert(response.status === 200, 'response status is not 200')
+  })
+
+  client.global.set('token', response.body.data.token)
+  client.global.set('id', response.body.data.id)
+
+%}
+
+### Get users
+GET {{host}}/user
+Authorization: Bearer {{token}}
+
+> {%
+  client.test('sucess response', () => {
+    client.assert(response.status === 200, 'response status is not 200')
+  })
+%}
+
+
+### Get user
+GET {{host}}/user/{{id}}
+Authorization: Bearer {{token}}
+
+> {%
+  client.test('sucess response', () => {
+    client.assert(response.status === 200, 'response status is not 200')
+  })
+%}
+
+### Update user
+PUT {{host}}/user/{{id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Test user updated"
+}
+> {%
+  client.test('sucess response', () => {
+    client.assert(response.status === 200, 'response status is not 200')
+  })
+%}
+
+
+### Update password
+PATCH {{host}}/user/{{id}}/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "oldPassword": "password",
+  "newPassword": "newpassword"
+}
+> {%
+  client.test('sucess response', () => {
+    client.assert(response.status === 200, 'response status is not 200')
+  })
+%}
