@@ -22,5 +22,5 @@ jobs:
           APP_PORT: 3000
           NODE_ENV: test
           JWT_SECRET: test
-          JWT_EXPIRES_IN: 360000
+          JWT_EXPIRES_IN: 3600000
           DATABASE_URL: test
